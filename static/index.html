@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .chat-container {
+            width: 100%;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .user-message {
+            background-color: #e0f7fa;
+            text-align: right;
+            color: #01579b;
+        }
+
+        .bot-message {
+            background-color: #c8e6c9;
+            text-align: left;
+            color: #1b5e20;
+        }
+
+        .input-container {
+            display: flex;
+            padding: 10px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #333;
+        }
+
+        body.dark-mode .container {
+            background-color: #444;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .message {
+            border-radius: 8px;
+        }
+
+        body.dark-mode .user-message {
+            background-color: #004d40;
+            color: #e0f7fa;
+        }
+
+        body.dark-mode .bot-message {
+            background-color: #33691e;
+            color: #c8e6c9;
+        }
+
+        /* Switch styles */
+        .switch-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 100%;
+        }
+
+        .switch-label {
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .switch {
+            display: inline-block;
+            position: relative;
+            width: 60px; 
+            height: 30px; 
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px; 
+            border: 2px solid #ccc; /* Adicionando borda */
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px; 
+            width: 26px; 
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Adicionando sombra */
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px); 
+        }
+
+        .slider.round {
+            border-radius: 30px; 
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* Agent label styles */
+        .agent-label {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            border-top: 2px solid black; 
+            padding-top: 10px; 
+        }
+
+        /* White text when dark mode is active */
+        body.dark-mode .agent-label {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Agent label -->
+    <div class="agent-label">Agente GPT - Ruyter</div>
+
+    <div class="container">
+        <div class="chat-container" id="chat-container">
+            <!-- Example of historical messages -->
+            <div class="message bot-message">Bot: Olá! Como posso ajudá-lo hoje?</div>
+            <!-- End of historical messages -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Digite sua mensagem..." onkeydown="handleKeyDown(event)">
+            <button id="send-btn" onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Switch container -->
+    <div class="switch-container">
+        <div class="switch-label">Modo Tela</div>
+        <label class="switch">
+            <input type="checkbox" id="theme-toggle" onclick="toggleTheme()">
+            <span class="slider round"></span>
+        </label>
+    </div>
+
+    <script>
+        function sendMessage() {
+            var userInput = document.getElementById('user-input').value;
+            var chatContainer = document.getElementById('chat-container');
+
+            // Append user message to chat container
+            var userMessage = '<div class="message user-message">Usuário: ' + userInput + '</div>';
+            chatContainer.innerHTML += userMessage;
+
+            // Prepare data for API request
+            var conversationHistory = [];
+            var messages = chatContainer.getElementsByClassName('message');
+            for (var i = 0; i < messages.length - 1; i++) {
+                // Check if message is from user or bot
+                var messageClass = messages[i].classList.contains('user-message') ? 'Usuário' : 'Bot';
+                // Extract message text without 'User:' or 'Bot:'
+                var messageText = messages[i].innerText.split(': ')[1];
+                // Format message according to JSON structure
+                var formattedMessage = messageClass + ': ' + messageText + ' <END_OF_TURN>';
+                // Push formatted message to conversation history
+                conversationHistory.push(formattedMessage);
+            }
+
+            var data = {
+                "human_say": userInput,
+                "conversation_history": conversationHistory
+            };
+
+            // Send message to API
+            fetch('http://127.0.0.1:8000/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Append bot response to chat container
+                var botMessage = '<div class="message bot-message">' + data.name + ': ' + data.say + '</div>';
+                chatContainer.innerHTML += botMessage;
+                // Scroll to bottom of chat container
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            })
+            .catch(error => console.error('Error:', error));
+
+            // Clear input after sending message
+            document.getElementById('user-input').value = '';
+        }
+
+        function toggleTheme() {
+            var body = document.body;
+            body.classList.toggle('dark-mode');
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
