@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat Form</title>
+  </head>
+  <body>
+    <form method="post" action="/chat">
+      <label for="conversation_history">Conversation history:</label><br>
+      <textarea id="conversation_history" name="conversation_history" readonly></textarea><br>
+      <label for="human_say">Mensagem:</label><br>
+      <input type="text" id="human_say" name="human_say"><br>
+      <input type="submit" value="Enviar">
+    </form>
+    <script>
+      // Fetch conversation history from the server and display it
+      fetch('/chat_form_history')
+        .then(response => response.json())
+        .then(data => {
+          const conversationHistory = document.getElementById('conversation_history');
+          conversationHistory.value = data.history.join('\n');
+        });
+
+      // Send user input to the server and display the response
+      const form = document.querySelector('form');
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const human_say = document.getElementById('human_say').value;
+  const conversation_history = document.getElementById('conversation_history');
+  const response = await fetch('/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            conversation_history: conversation_history.value.split('\n'),
+            human_say: human_say
+          })
+        });
+        const data = await response.json();
+        conversation_history.value += `\n${data.name}: ${data.say}`;
+        document.getElementById('human_say').value = '';
+      });
+    </script>
+  </body>
+</html><!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat Form</title>
+  </head>
+  <body>
+    <form method="post" action="/chat">
+      <label for="conversation_history">Conversation history:</label><br>
+      <textarea id="conversation_history" name="conversation_history" readonly></textarea><br>
+      <label for="human_say">Mensagem:</label><br>
+      <input type="text" id="human_say" name="human_say"><br>
+      <input type="submit" value="Enviar">
+    </form>
+    <script>
+      // Fetch conversation history from the server and display it
+      fetch('/chat_form_history')
+        .then(response => response.json())
+        .then(data => {
+          const conversationHistory = document.getElementById('conversation_history');
+          conversationHistory.value = data.history.join('\n');
+        });
+
+      // Send user input to the server and display the response
+      const form = document.querySelector('form');
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const human_say = document.getElementById('human_say').value;
+        const conversation_history = document.getElementById('conversation_history');
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            conversation_history: conversation_history.value.split('\n'),
+            human_say: human_say
+          })
+        });
+        const data = await response.json();
+        conversation_history.value += `\n${data.name}: ${data.say}`;
+        document.getElementById('human_say').value = '';
+      });
+    </script>
+  </body>
+</html>
